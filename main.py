@@ -29,7 +29,7 @@ def send_to_google_form(data, form_url):
         for index, row in data.iterrows():
             response = requests.post(form_url, data=row.to_dict())
             if response.status_code != 200:
-                logger.error(f"Error sending data to Google"+
+                logger.error(f"Error sending data to Google"
                  "Form: {response.status_code}")
     except Exception as e:
         logger.error(f"Error sending data to Google Form: {e}")
@@ -56,6 +56,7 @@ def main():
             send_to_google_form(last_week_data2, form_url)
 
     logger.info("Script finished")
+
 
 if __name__ == "__main__":
     main()
