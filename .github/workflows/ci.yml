@@ -44,7 +44,7 @@ jobs:
     - name: Set up Node.js
       uses: actions/setup-node@v2
       with:
-        node-version: '14'
+        node-version: '18'
 
     - name: Install markdownlint-cli
       run: |
@@ -52,4 +52,4 @@ jobs:
 
     - name: Lint markdown files
       run: |
-        markdownlint '**/*.md'
+        markdownlint '*.md'
