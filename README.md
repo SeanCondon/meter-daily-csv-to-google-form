@@ -35,3 +35,7 @@ This project is a Python script that reads two CSV files, extracts entries from 
     ```sh
     poetry run python main.py
     ```
+
+## CI Pipeline
+
+This project uses a CI pipeline that includes a markdown linter to ensure the quality and consistency of markdown files. The linter is configured to run on all `.md` files in the repository.
