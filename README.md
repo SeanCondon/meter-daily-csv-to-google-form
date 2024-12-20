@@ -1,2 +1,1 @@
-# meter-daily-csv-to-google-form
-A project to parse CSV files and post data to a Google Form
+This repository is empty. Any task executed on it should be considered a new capability and needs to be created.
