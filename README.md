@@ -1,5 +1,7 @@
 # CSV to Google Form
 
+![CI](https://github.com/SeanCondon/meter-daily-csv-to-google-form/actions/workflows/ci.yml/badge.svg)
+
 This project is a Python script that reads two CSV files, extracts entries from the last week, and posts the values to a Google Form.
 
 ## Installation
