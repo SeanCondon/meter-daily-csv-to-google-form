@@ -1,5 +1,6 @@
 import argparse
 
+import numpy as np
 import pandas as pd
 from datetime import datetime, timedelta
 from loguru import logger
@@ -17,39 +18,37 @@ def read_csv(file_path):
 
 def extract_import_entries(data: DataFrame, days: int = 7):
     try:
-        one_week_ago = datetime.now() - timedelta(days=days)
-        data['date'] = pd.to_datetime(data['Read Date and End Time'])
-        last_week_data = data[data['date'] >= one_week_ago]
-        last_week_data = last_week_data.drop(
+        n_days_ago = datetime.now() - timedelta(days=days)
+        data['date'] = pd.to_datetime(data['Read Date and End Time'], dayfirst=True)
+        data['month_day'] = data['date'].dt.strftime('%m-%d')
+        data['year'] = data['date'].dt.year
+        last_n_days_data = data[data['date'] >= n_days_ago]
+        last_n_days_data = last_n_days_data.drop(
             columns=['MPRN', 'Meter Serial Number', 'Read Date and End Time'])
-        last_week_data = last_week_data.pivot_table(
-            index='date',
+        last_n_days_data = last_n_days_data.pivot_table(
+            index=['month_day'],
             values='Read Value',
-            columns=['Read Type'],
+            columns=['Read Type', 'year'],
             aggfunc='sum')
-        return last_week_data
+
+        last_n_days_data = last_n_days_data.bfill(axis=0)
+
+        columns_list = list(last_n_days_data.columns)
+
+        for column in columns_list:
+            # """ Add a diff column to the dataframe """
+            last_n_days_data[str(column[0])+'_diff', column[1]] \
+                = last_n_days_data[column[0], column[1]].diff()
+            last_n_days_data[str(column[0])+'_diff', column[1]] \
+                = last_n_days_data[str(column[0])+'_diff', column[1]].replace(0, np.nan)
+
+        return last_n_days_data
     except Exception as e:
-        logger.error(f"Error extracting last week entries: {e}")
+        logger.error(f"Error extracting last n days entries: {e}")
         return None
 
 
-def send_to_google_form(data, form_url):
-    try:
-        for index, row in data.iterrows():
-            # exp_kwh: float = row["24 Hr Active Export Register (kWh)"]
-            night_kwh = row["Night Import Register (kWh)"]
-            day_kwh = row["Day Off-Peak Import Register (kWh)"]
-            peak_kwh = row["Day Peak Import Register (kWh)"]
-            imp_total = round(night_kwh + day_kwh + peak_kwh, 3)
-            logger.info(f'Processing {index} Import:{imp_total}')
-            # response = requests.post(form_url, data=row.to_dict())
-            # if response.status_code != 200:
-            #     logger.error(f"Error sending data to Google: {response.status_code}")
-    except Exception as e:
-        logger.error(f"Error sending data to Google Form: {e}")
-
-
-def main(file1: str, file2: str, form_url):
+def main(file1: str, file2: str, days: int = 7):
     """Accept as input 2 csv files and a Google Form URL.
     The script reads the csv files, extracts the entries from the last week,
     and sends them to the Google Form."""
@@ -64,10 +63,11 @@ def main(file1: str, file2: str, form_url):
     data = pd.concat([data1, data2.iloc[1:]])
 
     if data1 is not None:
-        last_week_data = extract_import_entries(data)
+        last_n_days_data = extract_import_entries(data, days)
 
-        if last_week_data is not None:
-            send_to_google_form(last_week_data, form_url)
+        if last_n_days_data is not None:
+            last_n_days_data.to_excel('last_n_days_data.xlsx')
+            # send_to_google_form(last_n_days_data, form_url)
 
     logger.info("Script finished")
 
@@ -75,13 +75,10 @@ def main(file1: str, file2: str, form_url):
 if __name__ == "__main__":
     """Add command line parameters to specify the csv files and the Google Form URL."""
     parser = argparse.ArgumentParser(description="Process CSV files and send data to Google Form.")
-    parser.add_argument('csvfile1', type=str, help='Path to the first CSV file')
-    parser.add_argument('csvfile2', type=str, help='Path to the second CSV file')
-    parser.add_argument('form_url', type=str, help='Google Form URL',
-                        default='https://docs.google.com/forms/d/e/your-form-id/formResponse')
+    parser.add_argument('dnpDailyCsv', type=str, help='Path to the Daily Day/Night/Peak CSV file')
+    parser.add_argument('inexDailyCsv', type=str, help='Path to the Daily Import/Export CSV file')
+    parser.add_argument('days', type=int, help='Number of days to consider', default=7)
 
     args = parser.parse_args()
 
-    assert len(args) == 3, "Please provide 3 arguments: csvfile1, csvfile2, and form_url"
-
-    main(args[0], args[1], args[2])
+    main(args.dnpDailyCsv, args.inexDailyCsv, args.days)
