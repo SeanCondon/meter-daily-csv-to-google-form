@@ -16,7 +16,7 @@ def read_csv(file_path):
         return None
 
 
-def extract_import_entries(data: DataFrame, days: int = 7):
+def extract_import_entries(data: DataFrame, days: int = 7) -> (DataFrame | None):
     try:
         n_days_ago = datetime.now() - timedelta(days=days)
         data['date'] = pd.to_datetime(data['Read Date and End Time'], dayfirst=True)
@@ -48,26 +48,48 @@ def extract_import_entries(data: DataFrame, days: int = 7):
         return None
 
 
-def main(file1: str, file2: str, days: int = 7):
-    """Accept as input 2 csv files and a Google Form URL.
-    The script reads the csv files, extracts the entries from the last week,
-    and sends them to the Google Form."""
+def concatenate_files(files: list[str]) -> DataFrame:
+    """Accept multiple files and concatenate them into a single DataFrame.
+    The files need to be of the same witdh and the same columns.
+    The nature of smart meter files means that data can be missing from
+    time to time, and so the script will fill the missing data from later files
+    if it becomes available.
+    """
+
+    if len(files) < 1:
+        logger.error("No files provided")
+        raise ValueError("No files provided")
+
+    data1 = read_csv(files[0])
+
+    for file in files[1:]:
+        data = read_csv(file)
+        if data1.shape[1] > data.shape[1]:
+            logger.error("Data does not match columns of Data1")
+
+        # Concatenate the data, but leave out the first row of the new data
+        data1 = pd.concat([data1, data])
+
+    return data1
+
+
+def main(files: list[str], days: int = 7):
+    """Accept as input csv files and a number of days to extract the entries from.
+    The script reads the csv files, extracts the entries from the n days,
+    and saves them to an Excel file.
+
+    The files can be a mix of Daily import/export files and Daily Day night peak files.
+    """
 
     logger.info("Script started")
 
-    data1 = read_csv(file1)
-    data2 = read_csv(file2)
-    if data1.shape[1] > data2.shape[1]:
-        logger.error("Data1 does not match columns of Data2")
+    data = concatenate_files(files)
 
-    data = pd.concat([data1, data2.iloc[1:]])
-
-    if data1 is not None:
+    if data is not None:
         last_n_days_data = extract_import_entries(data, days)
 
         if last_n_days_data is not None:
             last_n_days_data.to_excel('last_n_days_data.xlsx')
-            # send_to_google_form(last_n_days_data, form_url)
 
     logger.info("Script finished")
 
@@ -75,10 +97,9 @@ def main(file1: str, file2: str, days: int = 7):
 if __name__ == "__main__":
     """Add command line parameters to specify the csv files and the Google Form URL."""
     parser = argparse.ArgumentParser(description="Process CSV files and send data to Google Form.")
-    parser.add_argument('dnpDailyCsv', type=str, help='Path to the Daily Day/Night/Peak CSV file')
-    parser.add_argument('inexDailyCsv', type=str, help='Path to the Daily Import/Export CSV file')
     parser.add_argument('days', type=int, help='Number of days to consider', default=7)
+    parser.add_argument('dailyCsv', type=str, nargs='+', help='Path to the Daily CSV file')
 
     args = parser.parse_args()
 
-    main(args.dnpDailyCsv, args.inexDailyCsv, args.days)
+    main(args.dailyCsv, args.days)
