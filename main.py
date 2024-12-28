@@ -6,50 +6,84 @@ from datetime import datetime, timedelta
 from loguru import logger
 from pandas import DataFrame
 
+dtype_spec = {
+    'MPRN': str,
+    'Meter Serial Number': str,
+}
+
 
 def read_csv(file_path):
     try:
-        data = pd.read_csv(file_path)
+        data = pd.read_csv(file_path, dtype=dtype_spec)
         return data
     except Exception as e:
         logger.error(f"Error reading CSV file {file_path}: {e}")
         return None
 
 
-def extract_import_entries(data: DataFrame, days: int = 7) -> (DataFrame | None):
-    try:
-        n_days_ago = datetime.now() - timedelta(days=days)
-        data['date'] = pd.to_datetime(data['Read Date and End Time'], dayfirst=True)
-        data['month_day'] = data['date'].dt.strftime('%m-%d')
-        data['year'] = data['date'].dt.year
-        last_n_days_data = data[data['date'] >= n_days_ago]
-        last_n_days_data = last_n_days_data.drop(
-            columns=['MPRN', 'Meter Serial Number', 'Read Date and End Time'])
-        last_n_days_data = last_n_days_data.pivot_table(
-            index=['month_day'],
-            values='Read Value',
-            columns=['Read Type', 'year'],
-            aggfunc='sum')
+def extract_import_entries(data: DataFrame, days: int = 7) -> DataFrame:
+    """
+    Takes a data frame with date, value and type columns and pivots it to
+    day in year with type and year in columns.
+    If there are more than one value for a date then take the maximum of the 2.
+    This might be necessary when a later HDF file corrects an older one
 
-        last_n_days_data = last_n_days_data.bfill(axis=0)
+    We expect only one MPRN and one Meter Serial Number in the data frame.
+    We remove them from the columns and add them as an attribute.
 
-        columns_list = list(last_n_days_data.columns)
+    :param data: A data frame containing many concatenated files
+    :param days: number of days old data to extract
+    :return: A dataframe pivoted by day of year
+    """
+    mprns = data['MPRN'].unique()
+    assert len(mprns) == 1, "More than one MPRN in the data"
 
-        for column in columns_list:
-            # """ Add a diff column to the dataframe """
-            last_n_days_data[str(column[0])+'_diff', column[1]] \
-                = last_n_days_data[column[0], column[1]].diff()
-            last_n_days_data[str(column[0])+'_diff', column[1]] \
-                = last_n_days_data[str(column[0])+'_diff', column[1]].replace(0, np.nan)
+    msns = data['Meter Serial Number'].unique()
+    assert len(msns) == 1, "More than one Meter Serial Number in the data"
 
-        return last_n_days_data
-    except Exception as e:
-        logger.error(f"Error extracting last n days entries: {e}")
-        return None
+    n_days_ago = datetime.now() - timedelta(days=days)
+    data['date'] = pd.to_datetime(data['Read Date and End Time'], dayfirst=True)
+    data['month_day'] = data['date'].dt.strftime('%m-%d')
+    data['year'] = data['date'].dt.year
+    last_n_days_data = data[data['date'] >= n_days_ago]  # Filter out older than n days
+    last_n_days_data = last_n_days_data.drop(
+        columns=['Read Date and End Time', 'MPRN', 'Meter Serial Number'])
+
+    last_n_days_data = last_n_days_data.pivot_table(
+        index=['month_day'],
+        values='Read Value',
+        columns=['Read Type', 'year'],
+        aggfunc='max')
+
+    last_n_days_data.attrs['MPRN'] = mprns[0]
+    last_n_days_data.attrs['Meter Serial Number'] = msns[0]
+
+    return last_n_days_data
+
+
+def add_diff_columns(data: DataFrame, zero_to_nan: bool = True) -> DataFrame:
+    columns_list = list(data.columns)
+
+    # Forward-fill any empty values cells with data from last good value
+    data = data.ffill(axis=0)
+
+    for column in columns_list:
+        # Add a diff column to the dataframe
+        data[str(column[0]) + '_diff', column[1]] \
+            = data[column[0], column[1]].diff()
+        if zero_to_nan:
+            # Zero difference means there's no difference in a day
+            # Usually only possible for export, as everything else will
+            # change daily
+            data[str(column[0]) + '_diff', column[1]] \
+                = data[str(column[0]) + '_diff', column[1]].replace(0, np.nan)
+
+    return data
 
 
 def concatenate_files(files: list[str]) -> DataFrame:
-    """Accept multiple files and concatenate them into a single DataFrame.
+    """
+    Accept multiple files and concatenate them into a single DataFrame.
     The files need to be of the same witdh and the same columns.
     The nature of smart meter files means that data can be missing from
     time to time, and so the script will fill the missing data from later files
@@ -85,13 +119,19 @@ def main(files: list[str], days: int = 7):
 
     data = concatenate_files(files)
 
+    outfile = 'output.xlsx'
     if data is not None:
         last_n_days_data = extract_import_entries(data, days)
 
         if last_n_days_data is not None:
-            last_n_days_data.to_excel('last_n_days_data.xlsx')
+            with_diff_cols = add_diff_columns(last_n_days_data)
+            outfile = '%s_%s_%d_data.xlsx' % (
+                with_diff_cols.attrs['MPRN'],
+                with_diff_cols.attrs['Meter Serial Number'],
+                days)
+            with_diff_cols.to_excel(outfile)
 
-    logger.info("Script finished")
+    logger.info(f"Script finished. Wrote out to {outfile}")
 
 
 if __name__ == "__main__":
