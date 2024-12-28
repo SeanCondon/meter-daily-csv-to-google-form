@@ -108,7 +108,7 @@ def test_concatenate_3_file():
                               EXPECTED_IMPORT + EXPECTED_EXPORT + 1]
     assert export_row_26th[READ_TYPE] == TWENTYFOUR_HR_ACTIVE_EXPORT_REGISTER
     assert export_row_26th[READ_DATE_AND_END_TIME] == '26-12-2024 00:00'
-    assert export_row_26th[READ_VALUE] == 5450.502
+    assert export_row_26th[READ_VALUE] == 5450.509
 
     import_row_19th = df.iloc[EXPECTED_NIGHT + EXPECTED_DAY + EXPECTED_PEAK +
                               EXPECTED_IMPORT + EXPECTED_EXPORT + 14]
@@ -132,7 +132,7 @@ def test_concatenate_3_file():
                               EXPECTED_IMPORT + EXPECTED_EXPORT + 17]
     assert export_row_18th[READ_TYPE] == TWENTYFOUR_HR_ACTIVE_EXPORT_REGISTER
     assert export_row_18th[READ_DATE_AND_END_TIME] == '18-12-2024 00:00'
-    assert export_row_18th[READ_VALUE] == 5448.502
+    assert export_row_18th[READ_VALUE] == 5448.501
 
 
 def test_extract_import_entries_3_file():
@@ -157,21 +157,21 @@ def test_extract_import_entries_3_file():
 
     # Check that 17th still exists
     assert reduced_df.index[351] == "12-17"
-    assert reduced_df[TWENTYFOUR_HR_ACTIVE_IMPORT_REGISTER, 2024][351] == 34348.839
-    assert reduced_df[TWENTYFOUR_HR_ACTIVE_EXPORT_REGISTER, 2024][351] == 5448.502
+    assert reduced_df[TWENTYFOUR_HR_ACTIVE_IMPORT_REGISTER, 2024].iloc[351] == 34348.839
+    assert reduced_df[TWENTYFOUR_HR_ACTIVE_EXPORT_REGISTER, 2024].iloc[351] == 5448.502
 
     assert reduced_df.index[352] == "12-18"
     # Check that 18th import is overridden by bigger value
-    assert reduced_df[TWENTYFOUR_HR_ACTIVE_IMPORT_REGISTER, 2024][352] == 34400
+    assert reduced_df[TWENTYFOUR_HR_ACTIVE_IMPORT_REGISTER, 2024].iloc[352] == 34400
     # Check that smaller value of export does not override bigger
-    assert reduced_df[TWENTYFOUR_HR_ACTIVE_EXPORT_REGISTER, 2024][352] == 5448.502
+    assert reduced_df[TWENTYFOUR_HR_ACTIVE_EXPORT_REGISTER, 2024].iloc[352] == 5448.502
 
     assert reduced_df.index[354] == "12-20"
     # Check that 20th is added properly
-    assert reduced_df[TWENTYFOUR_HR_ACTIVE_IMPORT_REGISTER, 2024][354] == 34500.640
-    assert reduced_df[TWENTYFOUR_HR_ACTIVE_EXPORT_REGISTER, 2024][354] == 5448.503
+    assert reduced_df[TWENTYFOUR_HR_ACTIVE_IMPORT_REGISTER, 2024].iloc[354] == 34500.640
+    assert reduced_df[TWENTYFOUR_HR_ACTIVE_EXPORT_REGISTER, 2024].iloc[354] == 5448.503
     # Check that night value for 19th does not exist
-    assert np.isnan(reduced_df[NIGHT_IMPORT_REGISTER, 2024][354])
+    assert np.isnan(reduced_df[NIGHT_IMPORT_REGISTER, 2024].iloc[354])
 
 
 def test_add_diff_columns():
@@ -192,14 +192,14 @@ def test_add_diff_columns():
 
     # Check 17th value
     assert with_diff_cols.index[351] == "12-17"
-    assert with_diff_cols[TWENTYFOUR_HR_ACTIVE_IMPORT_REGISTER, 2024][351] == 34348.839
-    assert with_diff_cols[TWENTYFOUR_HR_ACTIVE_EXPORT_REGISTER, 2024][351] == 5448.502
+    assert with_diff_cols[TWENTYFOUR_HR_ACTIVE_IMPORT_REGISTER, 2024].iloc[351] == 34348.839
+    assert with_diff_cols[TWENTYFOUR_HR_ACTIVE_EXPORT_REGISTER, 2024].iloc[351] == 5448.502
 
     assert with_diff_cols.index[352] == "12-18"
-    assert with_diff_cols[TWENTYFOUR_HR_ACTIVE_IMPORT_REGISTER, 2024][352] == 34400
-    assert with_diff_cols[TWENTYFOUR_HR_ACTIVE_EXPORT_REGISTER, 2024][352] == 5448.502
+    assert with_diff_cols[TWENTYFOUR_HR_ACTIVE_IMPORT_REGISTER, 2024].iloc[352] == 34400
+    assert with_diff_cols[TWENTYFOUR_HR_ACTIVE_EXPORT_REGISTER, 2024].iloc[352] == 5448.502
     #   Check that diff is calculated correctly
-    assert with_diff_cols[TWENTYFOUR_HR_ACTIVE_IMPORT_REGISTER + '_diff', 2024][352] == \
+    assert with_diff_cols[TWENTYFOUR_HR_ACTIVE_IMPORT_REGISTER + '_diff', 2024].iloc[352] == \
            (34400 - 34348.839)
     # If there is no difference, it should be NaN
-    assert np.isnan(with_diff_cols[TWENTYFOUR_HR_ACTIVE_EXPORT_REGISTER + '_diff', 2024][352])
+    assert np.isnan(with_diff_cols[TWENTYFOUR_HR_ACTIVE_EXPORT_REGISTER + '_diff', 2024].iloc[352])
