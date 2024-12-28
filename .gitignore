@@ -1,4 +1,4 @@
 .idea
 __pycache__
 .~lock.*
-last_n_days_data.xlsx
+*data.xlsx

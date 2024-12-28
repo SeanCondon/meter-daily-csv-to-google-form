@@ -187,6 +187,9 @@ def test_add_diff_columns():
     assert with_diff_cols.shape[0] == 366  # One for every day in year
     assert with_diff_cols.shape[1] == 30  # Is 3 years x 5 columns x 2
 
+    assert with_diff_cols.attrs[MPRN] == '01234567890'
+    assert with_diff_cols.attrs[METER_SERIAL_NUMBER] == '000000000087654321'
+
     # Check 17th value
     assert with_diff_cols.index[351] == "12-17"
     assert with_diff_cols[TWENTYFOUR_HR_ACTIVE_IMPORT_REGISTER, 2024][351] == 34348.839
@@ -195,4 +198,8 @@ def test_add_diff_columns():
     assert with_diff_cols.index[352] == "12-18"
     assert with_diff_cols[TWENTYFOUR_HR_ACTIVE_IMPORT_REGISTER, 2024][352] == 34400
     assert with_diff_cols[TWENTYFOUR_HR_ACTIVE_EXPORT_REGISTER, 2024][352] == 5448.502
-    assert with_diff_cols[TWENTYFOUR_HR_ACTIVE_IMPORT_REGISTER+'_diff', 2024][352] == (34400 - 34348.839)
+    #   Check that diff is calculated correctly
+    assert with_diff_cols[TWENTYFOUR_HR_ACTIVE_IMPORT_REGISTER + '_diff', 2024][352] == \
+           (34400 - 34348.839)
+    # If there is no difference, it should be NaN
+    assert np.isnan(with_diff_cols[TWENTYFOUR_HR_ACTIVE_EXPORT_REGISTER + '_diff', 2024][352])
