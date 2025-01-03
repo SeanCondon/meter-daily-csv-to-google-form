@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meter Daily CSV to Google Form Documentation</title>
+</head>
+<body>
+    <h1>Meter Daily CSV to Google Form</h1>
+    <p>This project is a Python script that reads two CSV files, extracts entries from the last week, and posts the values to a Google Form.</p>
+
+    <h2>Installation</h2>
+    <ol>
+        <li>Clone the repository:
+            <pre><code>git clone https://github.com/SeanCondon/meter-daily-csv-to-google-form.git
+cd meter-daily-csv-to-google-form</code></pre>
+        </li>
+        <li>Install Poetry:
+            <pre><code>curl -sSL https://install.python-poetry.org | python3 -</code></pre>
+        </li>
+        <li>Install dependencies:
+            <pre><code>poetry install</code></pre>
+        </li>
+    </ol>
+
+    <h2>Usage</h2>
+    <ol>
+        <li>Update the file paths and Google Form URL in <code>main.py</code>:
+            <pre><code>file1 = 'path/to/your/csvfile1.csv'
+file2 = 'path/to/your/csvfile2.csv'
+form_url = 'https://docs.google.com/forms/d/e/your-form-id/formResponse'</code></pre>
+        </li>
+        <li>Run the script:
+            <pre><code>poetry run python main.py</code></pre>
+        </li>
+    </ol>
+
+    <h2>CI Pipeline</h2>
+    <p>This project uses a CI pipeline that includes a markdown linter to ensure the quality and consistency of markdown files. The linter is configured to run on all <code>.md</code> files in the repository.</p>
+</body>
+</html>

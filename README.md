@@ -47,3 +47,7 @@ from the last week, and posts the values to a Google Form.
 This project uses a CI pipeline that includes a markdown linter to ensure the
 quality and consistency of markdown files. The linter is configured to run on
 all `.md` files in the repository.
+
+## Documentation
+
+You can find the project documentation on [GitHub Pages](https://seancondon.github.io/meter-daily-csv-to-google-form/).
