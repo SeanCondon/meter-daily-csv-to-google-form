@@ -50,6 +50,8 @@ all `.md` files in the repository.
 
 ## GitHub Pages
 
-This repository is configured to publish a GitHub Pages site from the `docs` folder. You can access the site at the following URL:
+This repository is configured to publish a GitHub Pages site from the `docs` folder.
+You can access the site at the following URL:
 
-[https://SeanCondon.github.io/meter-daily-csv-to-google-form](https://SeanCondon.github.io/meter-daily-csv-to-google-form)
+[https://SeanCondon.github.io/meter-daily-csv-to-google-form]
+(https://SeanCondon.github.io/meter-daily-csv-to-google-form)
