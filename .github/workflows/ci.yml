@@ -53,3 +53,7 @@ jobs:
     - name: Lint markdown files
       run: |
         markdownlint '*.md'
+
+    - name: Lint markdown files in docs
+      run: |
+        markdownlint '**/*.md'
