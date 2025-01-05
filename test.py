@@ -1,6 +1,6 @@
 import numpy as np
 
-from main import main, concatenate_files, extract_import_entries, add_diff_columns
+from main import main, by_month, concatenate_files, extract_import_entries, add_diff_columns
 
 MPRN = 'MPRN'
 METER_SERIAL_NUMBER = 'Meter Serial Number'
@@ -174,7 +174,31 @@ def test_extract_import_entries_3_file():
     assert np.isnan(reduced_df[NIGHT_IMPORT_REGISTER, 2024].iloc[354])
 
 
-def test_add_diff_columns():
+def test_by_month():
+    """
+    Load 3 files and test their pivoting in a table
+    """
+
+    df = concatenate_files(['test/HDF_DailyDNP_kWh_01234567890_20-12-2024.csv',
+                            'test/HDF_Daily_kWh_01234567890_20-12-2024.csv',
+                            'test/HDF_Daily_kWh_01234567890_26-12-2024.csv'])
+
+    assert df is not None
+
+    reduced_df = extract_import_entries(df, 10000)
+    month_df = by_month(reduced_df)
+    assert month_df is not None
+
+    assert month_df.shape[0] == 12
+    assert month_df.shape[1] == 15
+
+    assert month_df.index[0] == "January"
+    assert month_df[TWENTYFOUR_HR_ACTIVE_IMPORT_REGISTER, 2024].iloc[0] == 22007.48
+
+    assert month_df.index[1] == "February"
+
+
+def test_add_diff_columns_days():
     df = concatenate_files(['test/HDF_DailyDNP_kWh_01234567890_20-12-2024.csv',
                             'test/HDF_Daily_kWh_01234567890_20-12-2024.csv',
                             'test/HDF_Daily_kWh_01234567890_26-12-2024.csv'])
@@ -203,3 +227,49 @@ def test_add_diff_columns():
            (34400 - 34348.839)
     # If there is no difference, it should be NaN
     assert np.isnan(with_diff_cols[TWENTYFOUR_HR_ACTIVE_EXPORT_REGISTER + '_diff', 2024].iloc[352])
+
+    # check that the start of 2024 less the end of 2023 is calculated properly
+    assert with_diff_cols[TWENTYFOUR_HR_ACTIVE_IMPORT_REGISTER + '_diff', 2024].iloc[0] == \
+           71.04100000000108
+
+    # There should be no difference for the 2022
+    assert np.isnan(with_diff_cols[TWENTYFOUR_HR_ACTIVE_IMPORT_REGISTER + '_diff', 2022].iloc[0])
+
+
+def test_add_diff_columns_months():
+    df = concatenate_files(['test/HDF_DailyDNP_kWh_01234567890_20-12-2024.csv',
+                            'test/HDF_Daily_kWh_01234567890_20-12-2024.csv',
+                            'test/HDF_Daily_kWh_01234567890_26-12-2024.csv'])
+
+    reduced_df = extract_import_entries(df, 10000)
+    month_df = by_month(reduced_df)
+    assert month_df is not None
+
+    with_diff_cols = add_diff_columns(month_df)
+    assert with_diff_cols is not None
+
+    assert with_diff_cols.shape[0] == 12  # One for every day in year
+    assert with_diff_cols.shape[1] == 30  # Is 3 years x 5 columns x 2
+
+    assert with_diff_cols.attrs[MPRN] == '01234567890'
+    assert with_diff_cols.attrs[METER_SERIAL_NUMBER] == '000000000087654321'
+
+    # Check December value
+    assert with_diff_cols.index[10] == "November"
+    assert with_diff_cols[TWENTYFOUR_HR_ACTIVE_IMPORT_REGISTER, 2024].iloc[10] == 33543.495
+    assert with_diff_cols[TWENTYFOUR_HR_ACTIVE_EXPORT_REGISTER, 2024].iloc[10] == 5444.639
+
+    assert with_diff_cols.index[11] == "December"
+    assert with_diff_cols[TWENTYFOUR_HR_ACTIVE_IMPORT_REGISTER, 2024].iloc[11] == 34640.64
+    assert with_diff_cols[TWENTYFOUR_HR_ACTIVE_EXPORT_REGISTER, 2024].iloc[11] == 5450.509
+    #   Check that diff is calculated correctly
+    assert with_diff_cols[TWENTYFOUR_HR_ACTIVE_IMPORT_REGISTER + '_diff', 2024].iloc[11] == \
+           (34640.64 - 33543.495)
+    # If there is no difference, it should be NaN
+    assert np.isnan(with_diff_cols[TWENTYFOUR_HR_ACTIVE_EXPORT_REGISTER + '_diff', 2022].iloc[11])
+
+    # check that the start of 2024 less the end of 2023 is calculated properly
+    assert with_diff_cols[TWENTYFOUR_HR_ACTIVE_IMPORT_REGISTER + '_diff', 2024].iloc[0] == 2004.893
+
+    # There should be no difference for the 2022
+    assert np.isnan(with_diff_cols[TWENTYFOUR_HR_ACTIVE_IMPORT_REGISTER + '_diff', 2022].iloc[0])

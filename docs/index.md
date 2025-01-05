@@ -31,8 +31,14 @@ the tool will take the maximum value for each day.
 ## Conversion to spreadsheet
 
 The tool converts the data to a spreadsheet format that is a pivot table of the data
-with columns by data type and by year. There is a row for every day of the year
-which facilitates comparison of energy usage year-on-year.
+with columns by data type and by year.
+
+It contains 2 sheets:
+
+* Daily - a row per day of the year
+* Monthly - a row per month of the year
+
+each of which facilitates comparison of energy usage year-on-year.
 
 The columns produced (depending on your source data) are:
 
@@ -60,10 +66,10 @@ The columns produced (depending on your source data) are:
   * Depending on your tariff this will be the least expensive time to use electricity.
   * This may not be present in your data if you are not on a time of use tariff.
 
-As these cumulative values make it hard to compare usage between days and
-across years, there will be an additional column for each of the above columns
-that is the difference between the current day and the previous day. This will
-allow you to see the daily usage.
+As these cumulative values make it hard to compare usage between days/months
+and across years, there will be an additional column for each of the above
+columns that is the difference between the current day and the previous day.
+This will allow you to see the daily usage.
 
 The tool will work with only one MPRN and one Meter Serial number at a time.
 Support for more than this may come in the future.
