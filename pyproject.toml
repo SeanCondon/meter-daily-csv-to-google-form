@@ -1,8 +1,9 @@
 [tool.poetry]
-name = "meter-daily-csv-to-google-form"
+name = "meter-daily-csv-to-spreadsheet"
 version = "0.1.0"
-description = "A script to parse CSV files and post data to a Google Form"
+description = "A script to parse HDF meter daily files and create a spreadsheet"
 authors = ["Sean Condon <scondo01@gmail.com>"]
+package-mode = false
 
 [tool.poetry.dependencies]
 python = "^3.10"
