@@ -57,3 +57,13 @@ jobs:
     - name: Lint markdown files in docs
       run: |
         markdownlint '**/*.md'
+
+  security-scan:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Aqua Security Trivy
+      uses: aquasecurity/trivy-action@0.31.0
+      with:
+        scan-type: 'fs'
+        scan-ref: '.'
+        trivy-config: trivy.yaml
