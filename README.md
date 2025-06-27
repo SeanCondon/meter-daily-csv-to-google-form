@@ -1,6 +1,7 @@
 # HDF to Spreadsheet
 
 ![CI](https://github.com/SeanCondon/meter-daily-csv-to-google-form/actions/workflows/ci.yml/badge.svg)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
 This project is a Python script that reads two CSV files, extracts entries
 from the last N days, and saves them to a spreadsheet.
