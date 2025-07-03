@@ -11,6 +11,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
 
     steps:
     - name: Checkout code
@@ -36,6 +38,8 @@ jobs:
 
   markdown-lint:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
 
     steps:
     - name: Checkout code
@@ -60,6 +64,9 @@ jobs:
 
   security-scan:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
     steps:
     - name: Aqua Security Trivy
       uses: aquasecurity/trivy-action@0.31.0
